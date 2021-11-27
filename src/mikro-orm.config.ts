@@ -1,6 +1,7 @@
 import { MikroORM } from "@mikro-orm/core";
 import path from "path";
 import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 
 export default {
   type: "postgresql",
@@ -10,7 +11,7 @@ export default {
   },
   dbName: "postgres",
   debug: true,
-  entities: [Post],
+  entities: [Post, User],
   port: 8000,
   user: "postgres",
   password: "225846310",
