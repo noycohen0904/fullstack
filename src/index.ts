@@ -4,6 +4,8 @@ import express from "express";
 import { buildSchema } from "type-graphql";
 import { ApolloServer } from "apollo-server-express";
 import { HelloResolver } from "./resolvers/hello";
+import { MyContext } from "./types";
+import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   // Create and Run migration
@@ -15,9 +17,10 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver],
+      resolvers: [HelloResolver, PostResolver],
       validate: false,
     }),
+    context: (): MyContext => ({ em: orm.em }),
   });
 
   apolloServer.applyMiddleware({ app });
