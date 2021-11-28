@@ -1,6 +1,14 @@
 import { User } from "../entities/User";
 import { MyContext } from "../types";
-import { Arg, Ctx, Field, Mutation, ObjectType, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Field,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql";
 import argon2 from "argon2";
 
 @ObjectType()
@@ -23,11 +31,21 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await em.findOne(User, { id: req.session.userId });
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("username") username: string,
     @Arg("password") password: string,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     if (username.length <= 1) {
       return {
@@ -68,6 +86,8 @@ export class UserResolver {
     const user = em.create(User, { username, password: hashedPassword });
     await em.persistAndFlush(user);
 
+    req.session.userId = user.id;
+
     return { user };
   }
 
@@ -75,7 +95,7 @@ export class UserResolver {
   async login(
     @Arg("username") username: string,
     @Arg("password") password: string,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, { username });
 
@@ -102,6 +122,8 @@ export class UserResolver {
         ],
       };
     }
+
+    req.session.userId = user.id;
 
     return { user };
   }
